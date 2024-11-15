@@ -8,3 +8,5 @@ router.get("/users/:user_id", usersController.getUserById);
 router.get("/users/:user_cpf", usersController.getUserByCpf)
 router.put("/users/:user_id", usersController.updateUserData);
 router.delete("/users/:user_id", usersController.deleteUser);
+
+export default userRoutes;

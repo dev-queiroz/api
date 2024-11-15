@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 exports.loginEnterprise = async (req, res) => {
-  const { enterprise_email, enterprise_password } = req.boby;
+  const { enterprise_email, enterprise_password } = req.body;
   try {
     const { data, error } = await supabase
       .from("enterprises")
@@ -86,7 +86,7 @@ exports.updateEnterpriseData = async (req, res) => {
     enterprise_email,
     enterprise_password,
   } = req.body;
-  const passHashed = await bcrypt.hash(password, 10);
+  const passHashed = await bcrypt.hash(enterprise_password, 10);
   const { data, error } = await supabase
     .from("enterprises")
     .update({

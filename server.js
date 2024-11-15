@@ -1,15 +1,16 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
+import express from "express";
+import cors from "cors";
+import "body-parser";
 const app = express();
 const port = process.env.PORT || 3000;
 app.use(cors());
 
-const enterpriseRoutes = require("./src/routes/enterpriseRoutes");
-const itemRoutes = require("./src/routes/itemRoutes");
-const userRoutes = require("./src/routes/userRoutes");
-const authenticateToken = require("./src/middlewares/auth");
+import enterpriseRoutes from "./src/routes/enterpriseRoutes.js";
+import itemRoutes from "./src/routes/itemRoutes.js";
+import userRoutes from "./src/routes/userRoutes.js";
+import authenticateToken from "./src/middlewares/auth.js";
+import bodyParser from "body-parser";
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
