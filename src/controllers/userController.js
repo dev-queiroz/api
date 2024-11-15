@@ -8,7 +8,7 @@ exports.loginUser = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("user_id, user_email, user_password")
+      .select("user_id, user_email, user_password, user_type")
       .eq("user_email", user_email)
       .single();
 
@@ -21,24 +21,29 @@ exports.loginUser = async (req, res) => {
     if (!validPassword)
       return res.status(400).json({ error: "Invalid password" });
 
-    const token = jwt.sign(
-      { user_id: data.user_id, user_email: data.user_email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const generateToken = (user) => {
+      return jwt.sign(
+        { id: user.id, email: user.email, user_type: user.user_type },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+    };
 
-    res.status(200).json({ message: "Login successful", token });
+    res.status(200).json({ message: "Login successful", generateToken });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.createUser = async (req, res) => {
-  const { user_name, user_cpf, user_email, user_password } = req.body;
+  const { user_name, user_cpf, user_email, user_password, user_type } =
+    req.body;
   const passHashed = await bcrypt.hash(user_password, 10);
   const { data, error } = await supabase
     .from("users")
-    .insert([{ user_name, user_cpf, user_email, user_password: passHashed }]);
+    .insert([
+      { user_name, user_cpf, user_email, user_password: passHashed, user_type },
+    ]);
 
   if (error) return res.status(400).json({ error: error.message });
   res.status(201).json(data);
@@ -78,11 +83,18 @@ exports.getUserByCpf = async (req, res) => {
 
 exports.updateUserData = async (req, res) => {
   const { user_id } = req.params;
-  const { user_name, user_cpf, user_email, user_password } = req.body;
+  const { user_name, user_cpf, user_email, user_password, user_type } =
+    req.body;
   const passHashed = await bcrypt.hash(user_password, 10);
   const { data, error } = await supabase
     .from("users")
-    .update({ user_name, user_cpf, user_email, user_password: passHashed })
+    .update({
+      user_name,
+      user_cpf,
+      user_email,
+      user_password: passHashed,
+      user_type,
+    })
     .eq("user_id", user_id);
 
   if (error) return res.status(400).json({ error: error.message });

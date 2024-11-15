@@ -4,10 +4,13 @@ const jwt = require("jsonwebtoken");
 
 exports.loginEnterprise = async (req, res) => {
   const { enterprise_email, enterprise_password } = req.body;
+
   try {
     const { data, error } = await supabase
       .from("enterprises")
-      .select("enterprise_id, enterprise_email, enterprise_password")
+      .select(
+        "enterprise_id, enterprise_email, enterprise_password, enterprise_type"
+      )
       .eq("enterprise_email", enterprise_email)
       .single();
 
@@ -17,19 +20,23 @@ exports.loginEnterprise = async (req, res) => {
       enterprise_password,
       data.enterprise_password
     );
+
     if (!validPassword)
       return res.status(400).json({ error: "Invalid password" });
 
-    const token = jwt.sign(
-      {
-        enterprise_id: data.enterprise_id,
-        enterprise_email: data.enterprise_email,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const generateEnterpriseToken = (enterprise) => {
+      return jwt.sign(
+        {
+          id: enterprise.id,
+          email: enterprise.email,
+          enterprise_type: enterprise.enterprise_type,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+    };
 
-    res.status(200).json({ message: "Login successful", token });
+    res.status(200).json({ message: "Login successful", generateEnterpriseToken });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -42,8 +49,11 @@ exports.createEnterprise = async (req, res) => {
     dono_id,
     enterprise_email,
     enterprise_password,
+    enterprise_type,
   } = req.body;
+
   const passHashed = await bcrypt.hash(enterprise_password, 10);
+
   const { data, error } = await supabase.from("enterprises").insert([
     {
       enterprise_name,
@@ -51,6 +61,7 @@ exports.createEnterprise = async (req, res) => {
       dono_id,
       enterprise_email,
       enterprise_password: passHashed,
+      enterprise_type,
     },
   ]);
 
