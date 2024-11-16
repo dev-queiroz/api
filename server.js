@@ -1,28 +1,23 @@
 require("dotenv").config();
-import express from "express";
-import cors from "cors";
-import "body-parser";
+const express = require("express");
+const helmet = require("helmet");
+const cors = require("cors");
+
+const usersRoutes = require("./src/routes/userRoutes");
+const postsRoutes = require("./src/routes/postsRoutes");
+
+const authenticateToken = require("./src/middlewares/auth");
+
 const app = express();
-const port = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use(helmet());
 app.use(cors());
 
-import enterpriseRoutes from "./src/routes/enterpriseRoutes.js";
-import itemRoutes from "./src/routes/itemRoutes.js";
-import userRoutes from "./src/routes/userRoutes.js";
-import authenticateToken from "./src/middlewares/auth.js";
-import bodyParser from "body-parser";
+app.use("/api/users", authenticateToken, usersRoutes);
+app.use("/api/posts", authenticateToken, postsRoutes);
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use("/api", authenticateToken, enterpriseRoutes);
-app.use("/api", authenticateToken, itemRoutes);
-app.use("/api", authenticateToken, userRoutes);
-
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });

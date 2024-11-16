@@ -1,100 +1,87 @@
-const supabase = require("../config/supabase.js");
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
+const supabase = require("../config/supabase");
 
-exports.loginUser = async (req, res) => {
-  const { user_email, user_password } = req.body;
-  try {
-    const { data, error } = await supabase
-      .from("users")
-      .select("user_id, user_email, user_password")
-      .eq("user_email", user_email)
-      .single();
+// login do usuário
+const login = async (req, res) => {
+  const { email } = req.body;
 
-    if (error) return res.status(400).json({ error: error.message });
-
-    const validPassword = await bcrypt.compare(
-      user_password,
-      data.user_password
-    );
-    if (!validPassword)
-      return res.status(400).json({ error: "Invalid password" });
-
-    const token = jwt.sign(
-      { user_id: data.user_id, user_email: data.user_email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    res.status(200).json({ message: "Login successful", token });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.createUser = async (req, res) => {
-  const { user_name, user_cpf, user_email, user_password } = req.body;
-  const passHashed = await bcrypt.hash(user_password, 10);
-  const { data, error } = await supabase
-    .from("users")
-    .insert([{ user_name, user_cpf, user_email, user_password: passHashed }]);
-
-  if (error) return res.status(400).json({ error: error.message });
-  res.status(201).json(data);
-};
-
-exports.getUserById = async (req, res) => {
-  const { user_id } = req.params;
+  // Verificar usuário no banco
   const { data, error } = await supabase
     .from("users")
     .select("*")
-    .eq("user_id", user_id)
+    .eq("email", email)
     .single();
+  if (error || !data)
+    return res.status(401).json({ error: "Credenciais inválidas" });
 
-  if (error) return res.status(400).json({ error: error.message });
+  const token = jwt.sign(
+    { id: data.id, email: data.email },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+  res.status(200).json({ token });
+};
+
+// Obter todos os usuários
+const getAllUsers = async (req, res) => {
+  const { data, error } = await supabase.from("users").select("*");
+  if (error) return res.status(500).json({ error: error.message });
   res.status(200).json(data);
 };
 
-exports.getUserByCpf = async (req, res) => {
-  const { user_cpf } = req.params;
-  const { enterprise_id } = req.user;
-
-  try {
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("user_cpf", user_cpf)
-      .eq("enterprise_id", enterprise_id)
-      .single();
-
-    if (error) return res.status(400).json({ error: error.message });
-
-    res.status(200).json(data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.updateUserData = async (req, res) => {
-  const { user_id } = req.params;
-  const { user_name, user_cpf, user_email, user_password } = req.body;
-  const passHashed = await bcrypt.hash(user_password, 10);
+// Obter um usuário específico com suas postagens
+const getUserWithPosts = async (req, res) => {
+  const { id } = req.params;
   const { data, error } = await supabase
     .from("users")
-    .update({ user_name, user_cpf, user_email, user_password: passHashed })
-    .eq("user_id", user_id);
-
-  if (error) return res.status(400).json({ error: error.message });
+    .select("*, posts(*)")
+    .eq("id", id)
+    .single();
+  if (error) return res.status(500).json({ error: error.message });
+  if (!data) return res.status(404).json({ error: "Usuário não encontrado" });
   res.status(200).json(data);
 };
 
-exports.deleteUser = async (req, res) => {
-  const { user_id } = req.params;
+// Criar novo usuário
+const createUser = async (req, res) => {
+  const { name, email } = req.body;
+  if (!name || !email)
+    return res.status(400).json({ error: "Dados incompletos" });
+
   const { data, error } = await supabase
     .from("users")
-    .delete()
-    .eq("user_id", user_id);
-  if (error) return res.status(400).json({ error: error.message });
-  res.status(204).send();
+    .insert([{ name, email }]);
+  if (error) return res.status(500).json({ error: error.message });
+  res.status(201).json(data[0]);
+};
+
+// Atualizar um usuário
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { name, email } = req.body;
+
+  const { data, error } = await supabase
+    .from("users")
+    .update({ name, email })
+    .eq("id", id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.status(200).json(data[0]);
+};
+
+// Deletar um usuário
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  const { error } = await supabase.from("users").delete().eq("id", id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.status(200).json({ message: "Usuário deletado com sucesso" });
+};
+
+module.exports = {
+  login,
+  getAllUsers,
+  getUserWithPosts,
+  createUser,
+  updateUser,
+  deleteUser,
 };
