@@ -3,12 +3,9 @@ const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
 
-// i can remove some ports
 const usersRoutes = require("./src/routes/userRoutes");
 const postsRoutes = require("./src/routes/postsRoutes");
 const commentsRoutes = require("./src/routes/commentsRoutes");
-
-const authenticateToken = require("./src/middlewares/auth");
 
 const app = express();
 
@@ -16,9 +13,10 @@ app.use(express.json());
 app.use(helmet());
 app.use(cors());
 
-app.use("/api/users", authenticateToken, usersRoutes);
-app.use("/api/posts", authenticateToken, postsRoutes);
-app.use("/api/comments", authenticateToken, commentsRoutes);
+// Rotas
+app.use("/api/users", usersRoutes); // O middleware `authenticateToken` está definido em rotas específicas
+app.use("/api/posts", postsRoutes);
+app.use("/api/comments", commentsRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
