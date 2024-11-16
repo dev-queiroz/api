@@ -1,33 +1,26 @@
 require("dotenv").config();
 const express = require("express");
+const helmet = require("helmet");
 const cors = require("cors");
-const bodyParser = require("body-parser");
 
-const app = express();
-const port = process.env.PORT || 10000;
-
-const enterpriseRoutes = require("./src/routes/enterpriseRoutes");
-const itemRoutes = require("./src/routes/itemRoutes");
-const userRoutes = require("./src/routes/userRoutes");
-const transactionRoutes = require("./src/routes/transactionRoutes");
+// i can remove some ports
+const usersRoutes = require("./src/routes/userRoutes");
+const postsRoutes = require("./src/routes/postsRoutes");
+const commentsRoutes = require("./src/routes/commentsRoutes");
 
 const authenticateToken = require("./src/middlewares/auth");
-const authorize = require("./src/middlewares/authorization");
 
+const app = express();
+
+app.use(express.json());
+app.use(helmet());
 app.use(cors());
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/api/users", authenticateToken, usersRoutes);
+app.use("/api/posts", authenticateToken, postsRoutes);
+app.use("/api/comments", authenticateToken, commentsRoutes);
 
-app.use("/api", authenticateToken, enterpriseRoutes);
-app.use("/api", authenticateToken, itemRoutes);
-app.use("/api", authenticateToken, userRoutes);
-app.use("/api", authenticateToken, transactionRoutes);
-
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
