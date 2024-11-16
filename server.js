@@ -3,6 +3,7 @@ const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
 
+// i can remove some ports
 const usersRoutes = require("./src/routes/userRoutes");
 const postsRoutes = require("./src/routes/postsRoutes");
 const commentsRoutes = require("./src/routes/commentsRoutes");
