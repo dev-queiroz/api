@@ -5,6 +5,7 @@ const cors = require("cors");
 
 const usersRoutes = require("./src/routes/userRoutes");
 const postsRoutes = require("./src/routes/postsRoutes");
+const commentsRoutes = require("./src/routes/commentsRoutes");
 
 const authenticateToken = require("./src/middlewares/auth");
 
@@ -16,6 +17,7 @@ app.use(cors());
 
 app.use("/api/users", authenticateToken, usersRoutes);
 app.use("/api/posts", authenticateToken, postsRoutes);
+app.use("/api/comments", authenticateToken, commentsRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
